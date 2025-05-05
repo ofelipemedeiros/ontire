@@ -1,5 +1,5 @@
 <template>
-  <div class="p-6">
+  <div class="p-6 flex flex-col space-y-2">
     <h1 class="text-2xl font-bold mb-6">Gestão de Veículos</h1>
     <!-- Vehicle Selection -->
     <div class="mb-6">
@@ -7,6 +7,7 @@
       <select
         id="vehicle-select"
         v-model="selectedVehicle"
+        @change="pneuStore.selecionarVeiculo(selectedVehicle)"
         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
       >
         <option :value="''">Selecione um veículo...</option>
@@ -19,7 +20,7 @@
         </option>
       </select>
     </div>
-    <div class="grid grid-cols-2 gap-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
       <!-- lado esquerdo: lista de pneus -->
       <div class="bg-white rounded-lg shadow p-6">
         <div class="flex justify-between items-center mb-4">
@@ -37,20 +38,29 @@
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Marca</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Modelo</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Posição</th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
-            <tr v-for="pneu in pneusSelecionados" :key="pneu.id">
+            <tr v-for="pneu in pneuStore.obterPneusDoVeiculoAtual()" :key="pneu.id" draggable="true" @dragstart="onDragStart(pneu.id)">
               <td class="px-6 py-4 whitespace-nowrap">{{ pneu.id }}</td>
               <td class="px-6 py-4 whitespace-nowrap">{{ pneu.marca }}</td>
               <td class="px-6 py-4 whitespace-nowrap">{{ pneu.modelo }}</td>
+              <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-500">
+                {{ pneu.posicao || 'N/A' }}
+              </td>
               <td class="px-6 py-4 whitespace-nowrap">
-                <button @click="removerPneuTabela(pneu.id)" class="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-xs">Remover</button>
+                <PneuOptionsMenu
+                  @remover="removerPneuComHistorico(pneu.id)"
+                  @desmontar="desmontarPneu(pneu.id)"
+                  @descartar="descartarPneu(pneu.id)"
+                  @historico="mostrarHistoricoPneu(pneu.id)"
+                />
               </td>
             </tr>
-            <tr v-if="pneusSelecionados.length === 0">
-              <td colspan="4" class="px-6 py-4 text-center text-gray-500">
+            <tr v-if="pneuStore.pneusPorVeiculo.length === 0">
+              <td colspan="5" class="px-6 py-4 text-center text-gray-500">
                 Nenhum pneu disponível
               </td>
             </tr>
@@ -63,11 +73,12 @@
               <DialogTitle class="text-lg font-bold mb-4">Selecionar Pneu</DialogTitle>
               <input v-model="search" placeholder="Buscar por ID, marca ou modelo..." class="w-full mb-4 px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400" />
               <ul class="divide-y divide-gray-100 max-h-72 overflow-auto">
-                <li v-for="pneu in pneusFiltrados" :key="pneu.id" class="flex justify-between items-center py-2 px-1 hover:bg-blue-50 rounded transition">
+                <li v-for="pneu in pneusDisponiveis" :key="pneu.id" class="flex justify-between items-center py-2 px-1 hover:bg-blue-50 rounded transition">
+                  
                   <span class="text-gray-700">{{ pneu.id }} - {{ pneu.marca }} {{ pneu.modelo }}</span>
-                  <button @click="adicionarPneuTabela(pneu)" class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-xs shadow">Adicionar</button>
+                  <button @click="pneuStore.adicionarPneuAoVeiculo(pneu)" class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-xs shadow">Adicionar</button>
                 </li>
-                <li v-if="pneusFiltrados.length === 0" class="text-center text-gray-400 py-4">Nenhum pneu encontrado</li>
+                <li v-if="pneusDisponiveis.length === 0" class="text-center text-gray-400 py-4">Nenhum pneu encontrado</li>
               </ul>
               <div class="mt-6 text-right">
                 <button @click="showDialog = false" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">Fechar</button>
@@ -75,6 +86,88 @@
             </DialogPanel>
           </div>
         </Dialog>
+
+        <!-- Dialog de confirmação de km-->
+        <Dialog :open="showKmModal" @close="showKmModal = false" class="fixed z-10 inset-0 overflow-y-auto">
+  <div class="flex items-center justify-center min-h-screen bg-black bg-opacity-40">
+    <DialogPanel class="bg-white max-w-sm w-full p-6 rounded-lg shadow-xl">
+      <DialogTitle class="text-lg font-bold mb-4">Informe o KM atual do veículo</DialogTitle>
+      <input v-model="kmInformado" type="number" min="0" class="w-full mb-4 px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="KM atual" />
+      <div class="flex justify-end gap-2">
+        <button @click="showKmModal = false" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">Cancelar</button>
+        <button :disabled="!kmInformado" @click="confirmarKmEAdicionar" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Confirmar</button>
+      </div>
+    </DialogPanel>
+  </div>
+</Dialog>
+<!-- Dialog para informar profundidade do sulco -->
+<Dialog :open="showSulcoModal" @close="showSulcoModal = false" class="fixed z-10 inset-0 overflow-y-auto">
+  <div class="flex items-center justify-center min-h-screen bg-black bg-opacity-40">
+    <DialogPanel class="bg-white max-w-md w-full p-6 rounded-lg shadow-xl">
+      <DialogTitle class="text-lg font-bold mb-4">Informe a profundidade do sulco (mm)</DialogTitle>
+      <input v-model="sulcoInformado" type="number" min="0" step="0.1" placeholder="Ex: 8.0" class="w-full mb-4 px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400" />
+      <div class="flex justify-end gap-2">
+        <button @click="showSulcoModal = false" class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400">Cancelar</button>
+        <button :disabled="!sulcoInformado" @click="confirmarSulcoEAdicionar" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Confirmar</button>
+      </div>
+    </DialogPanel>
+  </div>
+</Dialog>
+<Dialog :open="showHistoricoModal" @close="showHistoricoModal = false" class="fixed z-10 inset-0 overflow-y-auto">
+  <div class="flex items-center justify-center min-h-screen bg-black bg-opacity-40">
+    <DialogPanel class="bg-white max-w-xl w-full p-6 rounded-lg shadow-xl">
+      <DialogTitle class="text-lg font-bold mb-4">
+        Histórico do Pneu {{ historicoPneuSelecionado?.id || '' }}
+      </DialogTitle>
+      <div v-if="historicoPneuSelecionado && historicoPneuSelecionado.historico && historicoPneuSelecionado.historico.length > 0" class="relative px-4 py-8 bg-[#F4F4F4]">
+        <div class="absolute top-0 left-8 bottom-0 w-0.5 bg-[#0052C9] z-0"></div>
+        <template v-for="(item, idx) in historicoPneuSelecionado.historico" :key="idx">
+          <!-- Troca de veículo -->
+          <div v-if="idx > 0 && (item.veiculoId !== historicoPneuSelecionado.historico[idx - 1].veiculoId)" class="flex items-start relative mb-10" style="min-height: 60px;">
+            <span class="absolute left-2 top-4 flex items-center justify-center w-7 h-7 bg-white border-4 rounded-full z-10" style="border-color: #9D9D9D">
+              <svg class="w-4 h-4" :style="{ color: '#9D9D9D' }" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zm0 14.5A6.5 6.5 0 1110 3.5a6.5 6.5 0 010 13z"/></svg>
+            </span>
+            <div class="ml-16 rounded-lg shadow p-4 w-full text-center font-semibold" style="background-color: #F4F4F4; color: #9D9D9D; border: 1px solid #9D9D9D;">
+              Troca de veículo
+            </div>
+          </div>
+          <!-- Evento normal -->
+          <div class="flex items-start relative mb-10" style="min-height: 60px;">
+            <span class="absolute left-2 top-4 flex items-center justify-center w-7 h-7 bg-white border-4 rounded-full z-10" style="border-color: #0052C9">
+              <svg class="w-4 h-4" :style="{ color: '#0052C9' }" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zm0 14.5A6.5 6.5 0 1110 3.5a6.5 6.5 0 010 13z"/></svg>
+            </span>
+            <div class="ml-16 rounded-lg shadow p-4 w-full" style="background-color: #FFFFFF; border: 1px solid #0052C9;">
+              <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
+                <span class="text-sm font-semibold" style="color: #9D9D9D">{{ item.dataEntrada || '-' }}</span>
+                <span class="text-base font-bold" style="color: #0052C9">{{ item.placaVeiculo || item.veiculoId || '-' }}</span>
+              </div>
+              <div class="text-sm" style="color: #1C1C1C">
+                <div><span class="font-semibold">KM Entrada:</span> {{ item.kmEntrada ?? '-' }}</div>
+                <div><span class="font-semibold">Sulco Entrada (mm):</span> {{ item.sulcoEntrada ?? '-' }}</div>
+                <div><span class="font-semibold">Data Saída:</span> {{ item.dataSaida || '-' }}</div>
+                <div><span class="font-semibold">KM Saída:</span> {{ item.kmSaida ?? '-' }}</div>
+                <div><span class="font-semibold">Motivo Saída:</span> {{ item.motivoSaida || '-' }}</div>
+              </div>
+            </div>
+          </div>
+        </template>
+      </div>
+      <div v-else class="text-gray-500 text-center py-4">
+        Nenhum histórico encontrado para este pneu.
+      </div>
+      <div class="flex justify-end gap-2">
+        <button @click="exportarHistoricoPneuPDF(historicoPneuSelecionado)"
+          style="background-color: #0052c9"
+          class="px-4 py-2 text-white rounded hover:brightness-90 mr-2"
+        >Exportar PDF</button>
+        <button @click="showHistoricoModal = false"
+          style="background-color: #9d9d9d"
+          class="px-4 py-2 text-white rounded hover:bg-blue-700"
+        >Fechar</button>
+      </div>
+    </DialogPanel>
+  </div>
+</Dialog>
       </div>
       <!-- lado direito: visualização dos eixos -->
       <div class="bg-white rounded-lg shadow p-6">
@@ -98,19 +191,34 @@
           ></div>
           <!-- Pneus -->
           <div
-            v-for="(pneu, idx) in layoutPneus"
+            v-for="(slot, idx) in layoutPneus"
             :key="'pneu-' + idx"
-            class="absolute flex items-center justify-center bg-gray-200 rounded-md shadow text-xs font-semibold text-gray-700"
+            class="absolute flex items-center justify-center rounded-md shadow text-xs font-semibold"
             :style="{
-              left: pneu.x + 'px',
-              top: pneu.y + 'px',
+              left: slot.x + 'px',
+              top: slot.y + 'px',
               width: '56px',
-              height: '38px',
+              height: '42px', 
               border: '1px solid #cbd5e1',
-              boxShadow: '0 2px 8px #cbd5e166'
+              boxShadow: '0 2px 8px #cbd5e166',
+              background: getPneuAlocado(slot.label) ? '#93c5fd' : '#e5e7eb',
+              cursor: 'pointer',
+              overflow: 'visible',
+              zIndex: 10
             }"
+            @dragover.prevent
+            @drop="onDrop(slot.label)"
           >
-            {{ pneu.label }}
+            <div class="flex flex-col items-center w-full leading-tight">
+              <span class="block">{{ slot.label }}</span>
+              <span
+                v-if="getPneuAlocado(slot.label)"
+                class="block text-[10px] text-blue-900 font-bold mt-0.5 break-all"
+                style="line-height: 1.1;"
+              >
+                {{ getPneuAlocado(slot.label).id }}
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -123,17 +231,42 @@ import { ref, computed } from 'vue';
 import { useVeiculoStore } from '@/stores/Veiculo'; 
 import { usePneuStore } from '@/stores/pneu';
 import { Dialog, DialogPanel, DialogTitle } from '@headlessui/vue';
+import PneuOptionsMenu from '@/components/PneuOptionsMenu.vue';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import logoGlobaltrak from '@/assets/logoGlobaltrak.png';
 
 const veiculoStore = useVeiculoStore();
 const pneuStore = usePneuStore();
 const veiculos = veiculoStore.veiculos;
 const pneus = computed(() => pneuStore.pneus || []);
-const selectedVehicle = ref('');
+const showKmModal = ref(false);
+const kmInformado = ref('');
+const showSulcoModal = ref(false);
+const sulcoInformado = ref('');
+const pendingDrop = ref({ posicao: null, pneuId: null })
+const showHistoricoModal = ref(false)
+const historicoPneuSelecionado = ref(null)
+
+const selectedVehicle = computed({
+  get: () => veiculoStore.veiculoSelecionado,
+  set: (val) => veiculoStore.veiculoSelecionado = val
+})
 
 // Dialog state
 const showDialog = ref(false);
-const pneusSelecionados = ref([]);
+const pneusDisponiveis = computed(() => {
+  //IDs de todos os pneus já alocados em qualquer veículo
+  const alocados = Object.values(pneuStore.pneusPorVeiculo)
+  .flat()
+  .map( p=> p.id);
+  //Retorna só pneus que NÃO estão em alocados
+  return pneuStore.pneus.filter(pneu => !alocados.includes(pneu.id))
+})
 const search = ref('');
+
+const pneusAlocados = ref([]); // [{ idPneu, posicao }]
+let dragPneuId = null;
 
 function adicionarPneuTabela(pneu) {
   if (!pneusSelecionados.value.some(p => p.id === pneu.id)) {
@@ -142,8 +275,127 @@ function adicionarPneuTabela(pneu) {
   showDialog.value = false;
 }
 
-function removerPneuTabela(id) {
-  pneusSelecionados.value = pneusSelecionados.value.filter(p => p.id !== id);
+function removerPneuComHistorico(pneuId) {
+  //pedir o km e motivo da remoção (via modal)
+  const dataSaida = new Date().toLocaleDateString('pt-BR');
+  const kmSaida = 0;
+  const motivoSaida = 'Remover para teste';
+
+  //Atualiza o historico
+  pneuStore.adicionarHistoricoPneu(pneuId, {
+    dataSaida,
+    kmSaida,
+    motivoSaida
+  });
+
+  //Remover do veículo
+  pneuStore.removerPneuDoVeiculo(pneuId);
+  
+}
+
+function mostrarHistoricoPneu(id) {
+  const pneu = pneuStore.pneus.find(p => p.id === id );
+  historicoPneuSelecionado.value = pneu;
+  showHistoricoModal.value = true;
+}
+
+function exportarHistoricoPneuPDF(pneu) {
+  if (!pneu || !Array.isArray(pneu.historico)) return;
+  const doc = new jsPDF();
+  const img = new window.Image();
+  img.src = logoGlobaltrak;
+  img.onload = function() {
+    doc.addImage(img, 'PNG', 14, 14, 20, 20);
+    doc.setFontSize(16);
+    doc.setTextColor(28,28,28); // Preto profundo
+    doc.text(`Relatório de Histórico do Pneu ${pneu.id}`, 14, 40);
+    let y = 50;
+    let lastVeiculoId = null;
+    pneu.historico.forEach((item, idx) => {
+      // Troca de veículo
+      if (idx > 0 && item.veiculoId !== lastVeiculoId) {
+        doc.setFillColor(244, 244, 244); // Cinza claro
+        doc.setDrawColor(157, 157, 157); // Cinza médio
+        doc.setTextColor(157, 157, 157); // Cinza médio
+        doc.rect(14, y, 180, 12, 'FD');
+        doc.setFontSize(12);
+        doc.text('Troca de veículo', 104, y + 8, { align: 'center' });
+        y += 16;
+      }
+      // Card do evento
+      doc.setFillColor(255, 255, 255); // Branco
+      doc.setDrawColor(0, 82, 201); // Azul vibrante
+      doc.setTextColor(28,28,28); // Preto profundo
+      doc.rect(14, y, 180, 34, 'FD');
+      doc.setFontSize(12);
+      doc.text(`Data Entrada: ${item.dataEntrada || '-'}`, 18, y + 7);
+      doc.setTextColor(0,82,201);
+      doc.text(`Placa/Veículo: ${item.placaVeiculo || item.veiculoId || '-'}`, 120, y + 7);
+      doc.setFontSize(10);
+      doc.setTextColor(28,28,28);
+      doc.text(`KM Entrada: ${item.kmEntrada ?? '-'}`, 18, y + 15);
+      doc.text(`Sulco Entrada (mm): ${item.sulcoEntrada ?? '-'}`, 90, y + 15);
+      doc.text(`Data Saída: ${item.dataSaida || '-'}`, 18, y + 21);
+      doc.text(`KM Saída: ${item.kmSaida ?? '-'}`, 90, y + 21);
+      doc.text(`Motivo Saída: ${item.motivoSaida || '-'}`, 18, y + 27);
+      y += 40;
+      lastVeiculoId = item.veiculoId;
+    });
+    doc.save(`historico_${pneu.id}.pdf`);
+  };
+}
+
+function confirmarKmEAdicionar() {
+  const { posicao, pneuId } = pendingDrop.value;
+  const pneus = pneuStore.obterPneusDoVeiculoAtual();
+  const pneu = pneus.find(p => p.id === pneuId);
+  if (pneu) {
+    pneu.posicao = posicao;
+    pneuStore.adicionarHistoricoPneu(
+      pneu.id,
+      {
+        veiculoId: selectedVehicle.value,
+        dataEntrada: new Date().toLocaleDateString('pt-BR'),
+        kmEntrada: Number(kmInformado.value),
+        sulcoEntrada: Number(sulcoInformado.value)
+      }
+    );
+  }
+  dragPneuId = null;
+  showKmModal.value = false;
+  showSulcoModal.value = false;
+  sulcoInformado.value = '';
+  kmInformado.value = '';
+}
+
+function abrirSulcoDialog(posicao, pneuId) {
+  pendingDrop.value = { posicao, pneuId };
+  showSulcoModal.value = true;
+}
+
+function confirmarSulcoEAdicionar() {
+  showSulcoModal.value = false;
+  showKmModal.value = true;
+}
+
+function onDragStart(id) {
+  dragPneuId = id;
+}
+
+function onDrop(posicao) {
+  if (dragPneuId) {
+    abrirSulcoDialog(posicao, dragPneuId);
+  }
+}
+
+function getPneuAlocado(posicao) {
+  // Busca diretamente nos pneus do veículo selecionado
+  return pneuStore.obterPneusDoVeiculoAtual().find(p => p.posicao === posicao) || null;
+}
+
+function getPosicaoPneu(idPneu) {
+  const aloc = pneusDisponiveis.value.find(item => item.idPneu === idPneu);
+  return aloc ? aloc.posicao : '-';
 }
 
 const pneusFiltrados = computed(() => {
@@ -206,4 +458,13 @@ const layoutLinhasChassi = computed(() => {
   }
   return linhas;
 });
+
+// Funções de ação para o menu
+function desmontarPneu(id) {
+  alert('Função desmontar para o pneu ' + id + ' ainda não implementada.');
+}
+function descartarPneu(id) {
+  alert('Função descartar para o pneu ' + id + ' ainda não implementada.');
+}
+
 </script>

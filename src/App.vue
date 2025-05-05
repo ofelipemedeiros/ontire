@@ -1,6 +1,6 @@
 <script setup>
 import { RouterLink, RouterView } from 'vue-router'
-import HelloWorld from './components/HelloWorld.vue'
+import Dashboard from './views/Dashboard.vue';
 </script>
 
 <template>
@@ -14,7 +14,7 @@ import HelloWorld from './components/HelloWorld.vue'
             </div>
             <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
               <RouterLink
-              to="/"
+              to="/dashboard"
               class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900"
               >
               Dashboard
@@ -26,19 +26,19 @@ import HelloWorld from './components/HelloWorld.vue'
               Veículos
               </RouterLink>
               <RouterLink
-              to="/pneus"
+              to="/pneu"
               class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-500 hover:text-gray-900"
               >
               Gestão de Pneus
               </RouterLink>
               <RouterLink
-              to="/manutencao"
+              to="#"
               class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-500 hover:text-gray-900"
               >
               Manutenção
               </RouterLink>
               <RouterLink
-              to="/relatorios"
+              to="relatorios"
               class="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-500 hover:text-gray-900"
               >
               Relatórios
