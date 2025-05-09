@@ -101,7 +101,8 @@ export const usePneuStore = defineStore('pneu', () => {
                 dataSaida: dataSaida || null,
                 kmSaida: kmSaida || null,
                 sulcoSaida: sulcoSaida || null,
-                tipoMovimentacao: 'Pneu Removido'
+                tipoMovimentacao: 'Pneu Removido',
+                posicao: null
             });
         } else {
             // Instalação padrão
@@ -113,7 +114,8 @@ export const usePneuStore = defineStore('pneu', () => {
                 dataSaida: null,
                 kmSaida: null,
                 sulcoSaida: null,
-                tipoMovimentacao: tipoMovimentacao || 'Pneu Instalado'
+                tipoMovimentacao: tipoMovimentacao || 'Pneu Instalado',
+                posicao: arguments[1]?.posicao || null
             });
         }
     }

@@ -186,6 +186,7 @@
                 <span class="text-md font-bold" style="color: #0052C9">{{ item.tipoMovimentacao || '-' }}</span>
                 <div><span class="font-semibold">KM Entrada:</span> {{ item.kmEntrada ?? '-' }}</div>
                 <div><span class="font-semibold">Sulco Entrada (mm):</span> {{ item.sulcoEntrada ?? '-' }}</div>
+                <div><span class="font-semibold">Posição:</span> {{ item.posicao ?? '-' }}</div>
               </div>
             </div>
           </div>
@@ -333,12 +334,15 @@ function removerPneuComHistorico(pneuId) {
 
 function confirmarRemocaoPneu() {
   const dataSaida = new Date().toLocaleDateString('pt-BR');
+  const pneu = pneuStore.pneus.find(p => p.id === pneuIdParaRemover.value);
+  const posicaoAtual = pneu?.posicao || null;
   pneuStore.adicionarHistoricoPneu(pneuIdParaRemover.value, {
     veiculoId: selectedVehicle.value,
     dataSaida,
     kmSaida: kmSaidaInformado.value,
     sulcoSaida: sulcoSaidaInformado.value,
-    tipoMovimentacao: 'Pneu Removido'
+    tipoMovimentacao: 'Pneu Removido',
+    posicao: posicaoAtual
   });
   pneuStore.removerPneuDoVeiculo(pneuIdParaRemover.value);
   toast.success('Pneu removido do veículo!');
@@ -412,7 +416,8 @@ function confirmarKmEAdicionar() {
         veiculoId: selectedVehicle.value,
         dataEntrada: new Date().toLocaleDateString('pt-BR'),
         kmEntrada: Number(kmInformado.value),
-        sulcoEntrada: Number(sulcoInformado.value)
+        sulcoEntrada: Number(sulcoInformado.value),
+        posicao
       }
     );
   }
