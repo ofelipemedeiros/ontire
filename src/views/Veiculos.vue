@@ -115,11 +115,32 @@
     </DialogPanel>
   </div>
 </Dialog>
+<!-- Modal para informar KM e Sulco ao remover pneu -->
+<Dialog :open="showRemoveModal" @close="showRemoveModal = false" class="fixed z-10 inset-0 overflow-y-auto">
+  <div class="flex items-center justify-center min-h-screen bg-black bg-opacity-40">
+    <DialogPanel class="bg-base-100 max-w-md w-full p-6 rounded-lg shadow-xl">
+      <DialogTitle class="text-lg font-bold mb-4">Remover Pneu do Veículo</DialogTitle>
+      <div class="mb-4">
+        <label class="block mb-2 font-semibold">Hodômetro (KM de Saída):</label>
+        <input v-model="kmSaidaInformado" type="number" class="input input-bordered w-full" />
+      </div>
+      <div class="mb-4">
+        <label class="block mb-2 font-semibold">Profundidade do Sulco (mm):</label>
+        <input v-model="sulcoSaidaInformado" type="number" class="input input-bordered w-full" />
+      </div>
+      <div class="flex justify-end gap-2">
+        <button @click="confirmarRemocaoPneu" class="btn btn-error">Remover</button>
+        <button @click="showRemoveModal = false" class="btn">Cancelar</button>
+      </div>
+    </DialogPanel>
+  </div>
+</Dialog>
+<!--Dialog para mostrar Historico pneu-->
 <Dialog :open="showHistoricoModal" @close="showHistoricoModal = false" class="fixed z-10 inset-0 overflow-y-auto">
   <div class="flex items-center justify-center min-h-screen bg-black bg-opacity-40">
     <DialogPanel class="bg-base-100 max-w-xl w-full p-6 rounded-lg shadow-xl">
       <DialogTitle class="text-lg font-bold mb-4">
-        Histórico do Pneu {{ historicoPneuSelecionado?.id || '' }}
+        Histórico de Movimentação do Pneu {{ historicoPneuSelecionado?.id || '' }}
       </DialogTitle>
       <div v-if="historicoPneuSelecionado && historicoPneuSelecionado.historico && historicoPneuSelecionado.historico.length > 0" class="relative px-4 py-8 bg-[#F4F4F4]">
         <div class="absolute top-0 left-8 bottom-0 w-0.5 bg-[#0052C9] z-0"></div>
@@ -133,8 +154,26 @@
               Troca de veículo
             </div>
           </div>
-          <!-- Evento normal -->
-          <div class="flex items-start relative mb-10" style="min-height: 60px;">
+          <!-- Evento de saída (remoção) -->
+          <div v-if="item.tipoMovimentacao === 'Pneu Removido'" class="flex items-start relative mb-10" style="min-height: 60px;">
+            <span class="absolute left-2 top-4 flex items-center justify-center w-7 h-7 bg-base-100 border-4 rounded-full z-10" style="border-color: #E53935">
+              <svg class="w-4 h-4" :style="{ color: '#E53935' }" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zm0 14.5A6.5 6.5 0 1110 3.5a6.5 6.5 0 010 13z"/></svg>
+            </span>
+            <div class="ml-16 rounded-lg shadow p-4 w-full" style="background-color: #fff5f5; border: 1px solid #E53935;">
+              <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
+                <span class="text-sm font-semibold" style="color: #E53935">{{ item.dataSaida || '-' }}</span>
+                <span class="text-base font-bold" style="color: #E53935">{{ item.placaVeiculo || item.veiculoId || '-' }}</span>
+              </div>
+              <div class="text-sm" style="color: #E53935">
+                <span class="text-md font-bold">{{ item.tipoMovimentacao }}</span>
+                <div><span class="font-semibold">KM Saída:</span> {{ item.kmSaida ?? '-' }}</div>
+                <div><span class="font-semibold">Sulco Saída (mm):</span> {{ item.sulcoSaida ?? '-' }}</div>
+                <div><span class="font-semibold">Motivo Saída:</span> {{ item.motivoSaida || '-' }}</div>
+              </div>
+            </div>
+          </div>
+          <!-- Evento normal (instalação) -->
+          <div v-else class="flex items-start relative mb-10" style="min-height: 60px;">
             <span class="absolute left-2 top-4 flex items-center justify-center w-7 h-7 bg-base-100 border-4 rounded-full z-10" style="border-color: #0052C9">
               <svg class="w-4 h-4" :style="{ color: '#0052C9' }" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zm0 14.5A6.5 6.5 0 1110 3.5a6.5 6.5 0 010 13z"/></svg>
             </span>
@@ -144,11 +183,9 @@
                 <span class="text-base font-bold" style="color: #0052C9">{{ item.placaVeiculo || item.veiculoId || '-' }}</span>
               </div>
               <div class="text-sm" style="color: #1C1C1C">
+                <span class="text-md font-bold" style="color: #0052C9">{{ item.tipoMovimentacao || '-' }}</span>
                 <div><span class="font-semibold">KM Entrada:</span> {{ item.kmEntrada ?? '-' }}</div>
                 <div><span class="font-semibold">Sulco Entrada (mm):</span> {{ item.sulcoEntrada ?? '-' }}</div>
-                <div><span class="font-semibold">Data Saída:</span> {{ item.dataSaida || '-' }}</div>
-                <div><span class="font-semibold">KM Saída:</span> {{ item.kmSaida ?? '-' }}</div>
-                <div><span class="font-semibold">Motivo Saída:</span> {{ item.motivoSaida || '-' }}</div>
               </div>
             </div>
           </div>
@@ -282,23 +319,33 @@ function adicionarPneuTabela(pneu) {
   showDialog.value = false;
 }
 
+const showRemoveModal = ref(false);
+const kmSaidaInformado = ref('');
+const sulcoSaidaInformado = ref('');
+const pneuIdParaRemover = ref(null);
+
 function removerPneuComHistorico(pneuId) {
-  toast.success('Pneu removido do veículo!');
-  //pedir o km e motivo da remoção (via modal)
+  pneuIdParaRemover.value = pneuId;
+  showRemoveModal.value = true;
+  kmSaidaInformado.value = '';
+  sulcoSaidaInformado.value = '';
+}
+
+function confirmarRemocaoPneu() {
   const dataSaida = new Date().toLocaleDateString('pt-BR');
-  const kmSaida = 0;
-  const motivoSaida = 'Remover para teste';
-
-  //Atualiza o historico
-  pneuStore.adicionarHistoricoPneu(pneuId, {
+  pneuStore.adicionarHistoricoPneu(pneuIdParaRemover.value, {
+    veiculoId: selectedVehicle.value,
     dataSaida,
-    kmSaida,
-    motivoSaida
+    kmSaida: kmSaidaInformado.value,
+    sulcoSaida: sulcoSaidaInformado.value,
+    tipoMovimentacao: 'Pneu Removido'
   });
-
-  //Remover do veículo
-  pneuStore.removerPneuDoVeiculo(pneuId);
-  
+  pneuStore.removerPneuDoVeiculo(pneuIdParaRemover.value);
+  toast.success('Pneu removido do veículo!');
+  showRemoveModal.value = false;
+  pneuIdParaRemover.value = null;
+  kmSaidaInformado.value = '';
+  sulcoSaidaInformado.value = '';
 }
 
 function mostrarHistoricoPneu(id) {

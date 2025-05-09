@@ -87,19 +87,35 @@ export const usePneuStore = defineStore('pneu', () => {
     ])
 
     //Adicionar histórico de pneu
-    function adicionarHistoricoPneu(pneuId, {veiculoId, dataEntrada, kmEntrada, sulcoEntrada}){
+    function adicionarHistoricoPneu(pneuId, {veiculoId, dataEntrada, kmEntrada, sulcoEntrada, dataSaida, kmSaida, sulcoSaida, tipoMovimentacao}){
         const pneu = pneus.value.find(p => p.id === pneuId);
         if(!pneu) return;
         if(!pneu.historico) pneu.historico = [];
-        pneu.historico.push({
-            veiculoId,
-            dataEntrada,
-            kmEntrada,
-            sulcoEntrada,
-            dataSaida: null,
-            kmSaida: null,
-            motivoSaida: null
-        });
+        // Se for remoção, registra evento de saída
+        if(tipoMovimentacao === 'Pneu Removido') {
+            pneu.historico.push({
+                veiculoId,
+                dataEntrada: null,
+                kmEntrada: null,
+                sulcoEntrada: null,
+                dataSaida: dataSaida || null,
+                kmSaida: kmSaida || null,
+                sulcoSaida: sulcoSaida || null,
+                tipoMovimentacao: 'Pneu Removido'
+            });
+        } else {
+            // Instalação padrão
+            pneu.historico.push({
+                veiculoId,
+                dataEntrada: dataEntrada || null,
+                kmEntrada: kmEntrada || null,
+                sulcoEntrada: sulcoEntrada || null,
+                dataSaida: null,
+                kmSaida: null,
+                sulcoSaida: null,
+                tipoMovimentacao: tipoMovimentacao || 'Pneu Instalado'
+            });
+        }
     }
 
     function finalizarHistorico(pneuId, {dataSaida, kmSaida, motivoSaida}){
