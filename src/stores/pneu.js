@@ -131,7 +131,6 @@ export const usePneuStore = defineStore('pneu', () => {
 
     function adicionarPneuAoVeiculo(pneu){
         if(!veiculoSelecionado.value) return;
-
         const veiculoId = veiculoSelecionado.value;
         pneusPorVeiculo.value[veiculoId].push(pneu)
 
@@ -139,10 +138,15 @@ export const usePneuStore = defineStore('pneu', () => {
 
     function removerPneuDoVeiculo(pneuId){
         if(!veiculoSelecionado.value) return;
-
         const veiculoId = veiculoSelecionado.value;
         pneusPorVeiculo.value[veiculoId] = pneusPorVeiculo.value[veiculoId].filter(pneu => pneu.id !== pneuId)
+        const pneu = pneus.value.find(p => p.id === pneuId);
+    if(pneu){
+        pneu.posicao = null;
     }
+    }
+
+    
 
     function obterPneusDoVeiculoAtual() {
         return pneusPorVeiculo.value[veiculoSelecionado.value] || [];

@@ -3,12 +3,12 @@
     <h1 class="text-2xl font-bold mb-6">Gestão de Veículos</h1>
     <!-- Vehicle Selection -->
     <div class="mb-6">
-      <label for="vehicle-select" class="block text-sm font-medium text-gray-700">Selecionar Veículo</label>
+      
       <select
         id="vehicle-select"
         v-model="selectedVehicle"
         @change="pneuStore.selecionarVeiculo(selectedVehicle)"
-        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+        class="select select-bordered w-full bg-base-100 text-base-content"
       >
         <option :value="''">Selecione um veículo...</option>
         <option 
@@ -22,45 +22,45 @@
     </div>
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
       <!-- lado esquerdo: lista de pneus -->
-      <div class="bg-white rounded-lg shadow p-6">
+      <div class="bg-base-100 rounded-lg shadow p-6">
         <div class="flex justify-between items-center mb-4">
           <h2 class="text-lg font-semibold">Lista de Pneus</h2>
           <button
             @click="showDialog = true"
-            class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            class="px-4 py-2 bg-primary text-primary-content rounded-md hover:bg-primary-focus focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
           >
             Selecionar Pneu
           </button>
         </div>
-        <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-gray-50">
+        <table class="min-w-full divide-y divide-base-300">
+          <thead class="bg-base-200">
             <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Marca</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Modelo</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Posição</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-base-content uppercase tracking-wider">ID</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-base-content uppercase tracking-wider">Marca</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-base-content uppercase tracking-wider">Modelo</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-base-content uppercase tracking-wider">Posição</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-base-content uppercase tracking-wider">Ações</th>
             </tr>
           </thead>
-          <tbody class="bg-white divide-y divide-gray-200">
+          <tbody class="bg-base-100 divide-y divide-base-300">
             <tr v-for="pneu in pneuStore.obterPneusDoVeiculoAtual()" :key="pneu.id" draggable="true" @dragstart="onDragStart(pneu.id)">
               <td class="px-6 py-4 whitespace-nowrap">{{ pneu.id }}</td>
               <td class="px-6 py-4 whitespace-nowrap">{{ pneu.marca }}</td>
               <td class="px-6 py-4 whitespace-nowrap">{{ pneu.modelo }}</td>
-              <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-500">
+              <td class="px-6 py-4 whitespace-nowrap text-xs text-base-content">
                 {{ pneu.posicao || 'N/A' }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <PneuOptionsMenu
                   @remover="removerPneuComHistorico(pneu.id)"
-                  @desmontar="desmontarPneu(pneu.id)"
+                  @manutencao="manutencaoPneu(pneu.id)"
                   @descartar="descartarPneu(pneu.id)"
                   @historico="mostrarHistoricoPneu(pneu.id)"
                 />
               </td>
             </tr>
             <tr v-if="pneuStore.pneusPorVeiculo.length === 0">
-              <td colspan="5" class="px-6 py-4 text-center text-gray-500">
+              <td colspan="5" class="px-6 py-4 text-center text-base-content">
                 Nenhum pneu disponível
               </td>
             </tr>
@@ -69,19 +69,21 @@
         <!-- Dialog de seleção de pneus -->
         <Dialog :open="showDialog" @close="showDialog = false" class="fixed z-10 inset-0 overflow-y-auto">
           <div class="flex items-center justify-center min-h-screen bg-black bg-opacity-40">
-            <DialogPanel class="bg-white max-w-lg w-full p-6 rounded-lg shadow-xl">
+            <DialogPanel class="bg-base-100 max-w-lg w-full p-6 rounded-lg shadow-xl">
               <DialogTitle class="text-lg font-bold mb-4">Selecionar Pneu</DialogTitle>
-              <input v-model="search" placeholder="Buscar por ID, marca ou modelo..." class="w-full mb-4 px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400" />
-              <ul class="divide-y divide-gray-100 max-h-72 overflow-auto">
+              <input v-model="search" placeholder="Buscar por ID, marca ou modelo..." class="input input-bordered w-full bg-base-100 text-base-content placeholder-base-content mb-4" />
+              <ul class="divide-y divide-base-200 max-h-72 overflow-auto">
                 <li v-for="pneu in pneusDisponiveis" :key="pneu.id" class="flex justify-between items-center py-2 px-1 hover:bg-blue-50 rounded transition">
                   
-                  <span class="text-gray-700">{{ pneu.id }} - {{ pneu.marca }} {{ pneu.modelo }}</span>
-                  <button @click="pneuStore.adicionarPneuAoVeiculo(pneu)" class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-xs shadow">Adicionar</button>
+                  <span class="text-base-content">{{ pneu.id }} - {{ pneu.marca }} {{ pneu.modelo }}</span>
+                  <div class="tooltip" data-tip="Adicionar este pneu ao veículo">
+  <button @click="pneuStore.adicionarPneuAoVeiculo(pneu)" class="btn btn-primary btn-sm">Adicionar</button>
+</div>
                 </li>
                 <li v-if="pneusDisponiveis.length === 0" class="text-center text-gray-400 py-4">Nenhum pneu encontrado</li>
               </ul>
               <div class="mt-6 text-right">
-                <button @click="showDialog = false" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">Fechar</button>
+                <button @click="showDialog = false" class="btn btn-neutral">Fechar</button>
               </div>
             </DialogPanel>
           </div>
@@ -90,12 +92,12 @@
         <!-- Dialog de confirmação de km-->
         <Dialog :open="showKmModal" @close="showKmModal = false" class="fixed z-10 inset-0 overflow-y-auto">
   <div class="flex items-center justify-center min-h-screen bg-black bg-opacity-40">
-    <DialogPanel class="bg-white max-w-sm w-full p-6 rounded-lg shadow-xl">
+    <DialogPanel class="bg-base-100 max-w-sm w-full p-6 rounded-lg shadow-xl">
       <DialogTitle class="text-lg font-bold mb-4">Informe o KM atual do veículo</DialogTitle>
       <input v-model="kmInformado" type="number" min="0" class="w-full mb-4 px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="KM atual" />
       <div class="flex justify-end gap-2">
-        <button @click="showKmModal = false" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">Cancelar</button>
-        <button :disabled="!kmInformado" @click="confirmarKmEAdicionar" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Confirmar</button>
+        <button @click="showKmModal = false" class="px-4 py-2 bg-base-300 rounded hover:bg-base-200">Cancelar</button>
+        <button :disabled="!kmInformado" @click="confirmarKmEAdicionar" class="px-4 py-2 bg-primary text-primary-content rounded hover:bg-primary-focus">Confirmar</button>
       </div>
     </DialogPanel>
   </div>
@@ -103,19 +105,19 @@
 <!-- Dialog para informar profundidade do sulco -->
 <Dialog :open="showSulcoModal" @close="showSulcoModal = false" class="fixed z-10 inset-0 overflow-y-auto">
   <div class="flex items-center justify-center min-h-screen bg-black bg-opacity-40">
-    <DialogPanel class="bg-white max-w-md w-full p-6 rounded-lg shadow-xl">
+    <DialogPanel class="bg-base-100 max-w-md w-full p-6 rounded-lg shadow-xl">
       <DialogTitle class="text-lg font-bold mb-4">Informe a profundidade do sulco (mm)</DialogTitle>
       <input v-model="sulcoInformado" type="number" min="0" step="0.1" placeholder="Ex: 8.0" class="w-full mb-4 px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400" />
       <div class="flex justify-end gap-2">
-        <button @click="showSulcoModal = false" class="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400">Cancelar</button>
-        <button :disabled="!sulcoInformado" @click="confirmarSulcoEAdicionar" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Confirmar</button>
+        <button @click="showSulcoModal = false" class="px-4 py-2 bg-base-300 text-gray-800 rounded hover:bg-base-200">Cancelar</button>
+        <button :disabled="!sulcoInformado" @click="confirmarSulcoEAdicionar" class="px-4 py-2 bg-primary text-primary-content rounded hover:bg-primary-focus">Confirmar</button>
       </div>
     </DialogPanel>
   </div>
 </Dialog>
 <Dialog :open="showHistoricoModal" @close="showHistoricoModal = false" class="fixed z-10 inset-0 overflow-y-auto">
   <div class="flex items-center justify-center min-h-screen bg-black bg-opacity-40">
-    <DialogPanel class="bg-white max-w-xl w-full p-6 rounded-lg shadow-xl">
+    <DialogPanel class="bg-base-100 max-w-xl w-full p-6 rounded-lg shadow-xl">
       <DialogTitle class="text-lg font-bold mb-4">
         Histórico do Pneu {{ historicoPneuSelecionado?.id || '' }}
       </DialogTitle>
@@ -124,7 +126,7 @@
         <template v-for="(item, idx) in historicoPneuSelecionado.historico" :key="idx">
           <!-- Troca de veículo -->
           <div v-if="idx > 0 && (item.veiculoId !== historicoPneuSelecionado.historico[idx - 1].veiculoId)" class="flex items-start relative mb-10" style="min-height: 60px;">
-            <span class="absolute left-2 top-4 flex items-center justify-center w-7 h-7 bg-white border-4 rounded-full z-10" style="border-color: #9D9D9D">
+            <span class="absolute left-2 top-4 flex items-center justify-center w-7 h-7 bg-base-100 border-4 rounded-full z-10" style="border-color: #9D9D9D">
               <svg class="w-4 h-4" :style="{ color: '#9D9D9D' }" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zm0 14.5A6.5 6.5 0 1110 3.5a6.5 6.5 0 010 13z"/></svg>
             </span>
             <div class="ml-16 rounded-lg shadow p-4 w-full text-center font-semibold" style="background-color: #F4F4F4; color: #9D9D9D; border: 1px solid #9D9D9D;">
@@ -133,7 +135,7 @@
           </div>
           <!-- Evento normal -->
           <div class="flex items-start relative mb-10" style="min-height: 60px;">
-            <span class="absolute left-2 top-4 flex items-center justify-center w-7 h-7 bg-white border-4 rounded-full z-10" style="border-color: #0052C9">
+            <span class="absolute left-2 top-4 flex items-center justify-center w-7 h-7 bg-base-100 border-4 rounded-full z-10" style="border-color: #0052C9">
               <svg class="w-4 h-4" :style="{ color: '#0052C9' }" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zm0 14.5A6.5 6.5 0 1110 3.5a6.5 6.5 0 010 13z"/></svg>
             </span>
             <div class="ml-16 rounded-lg shadow p-4 w-full" style="background-color: #FFFFFF; border: 1px solid #0052C9;">
@@ -152,30 +154,31 @@
           </div>
         </template>
       </div>
-      <div v-else class="text-gray-500 text-center py-4">
+      <div v-else class="text-base-content text-center py-4">
         Nenhum histórico encontrado para este pneu.
       </div>
       <div class="flex justify-end gap-2">
         <button @click="exportarHistoricoPneuPDF(historicoPneuSelecionado)"
           style="background-color: #0052c9"
-          class="px-4 py-2 text-white rounded hover:brightness-90 mr-2"
+          class="px-4 py-2 text-primary-content rounded hover:brightness-90 mr-2"
         >Exportar PDF</button>
         <button @click="showHistoricoModal = false"
           style="background-color: #9d9d9d"
-          class="px-4 py-2 text-white rounded hover:bg-blue-700"
+          class="px-4 py-2 text-primary-content rounded hover:bg-primary-focus"
         >Fechar</button>
       </div>
     </DialogPanel>
   </div>
 </Dialog>
       </div>
+      
       <!-- lado direito: visualização dos eixos -->
-      <div class="bg-white rounded-lg shadow p-6">
+      <div class="bg-base-100 rounded-lg shadow p-6">
         <h2 class="text-lg font-semibold mb-4">Visualização dos Eixos</h2>
-        <div v-if="!selectedVehicle" class="text-center text-gray-500 py-20">
+        <div v-if="!selectedVehicle" class="text-center text-base-content py-20">
           Selecione um veículo para ver a configuração dos eixos
         </div>
-        <div v-else class="relative w-[500px] h-[600px] bg-gray-100 border rounded-lg p-4">
+        <div v-else class="relative w-[500px] h-[600px] bg-base-200 border rounded-lg p-4">
           <!-- Linhas do chassi -->
           <div
             v-for="(linha, idx) in layoutLinhasChassi"
@@ -193,15 +196,17 @@
           <div
             v-for="(slot, idx) in layoutPneus"
             :key="'pneu-' + idx"
-            class="absolute flex items-center justify-center rounded-md shadow text-xs font-semibold"
+            :class="[
+              'absolute flex items-center justify-center rounded-md shadow text-xs font-semibold',
+              getPneuAlocado(slot.label)
+                ? 'bg-primary text-primary-content border-primary'
+                : 'bg-base-200 text-base-content border-base-300'
+            ]"
             :style="{
               left: slot.x + 'px',
               top: slot.y + 'px',
               width: '56px',
-              height: '42px', 
-              border: '1px solid #cbd5e1',
-              boxShadow: '0 2px 8px #cbd5e166',
-              background: getPneuAlocado(slot.label) ? '#93c5fd' : '#e5e7eb',
+              height: '42px',
               cursor: 'pointer',
               overflow: 'visible',
               zIndex: 10
@@ -228,6 +233,7 @@
 
 <script setup>
 import { ref, computed } from 'vue';
+import { toast } from 'vue3-toastify';
 import { useVeiculoStore } from '@/stores/Veiculo'; 
 import { usePneuStore } from '@/stores/pneu';
 import { Dialog, DialogPanel, DialogTitle } from '@headlessui/vue';
@@ -238,6 +244,7 @@ import logoGlobaltrak from '@/assets/logoGlobaltrak.png';
 
 const veiculoStore = useVeiculoStore();
 const pneuStore = usePneuStore();
+
 const veiculos = veiculoStore.veiculos;
 const pneus = computed(() => pneuStore.pneus || []);
 const showKmModal = ref(false);
@@ -265,17 +272,18 @@ const pneusDisponiveis = computed(() => {
 })
 const search = ref('');
 
-const pneusAlocados = ref([]); // [{ idPneu, posicao }]
 let dragPneuId = null;
 
 function adicionarPneuTabela(pneu) {
   if (!pneusSelecionados.value.some(p => p.id === pneu.id)) {
     pneusSelecionados.value.push(pneu);
+    toast.success('Pneu adicionado ao veículo!');
   }
   showDialog.value = false;
 }
 
 function removerPneuComHistorico(pneuId) {
+  toast.success('Pneu removido do veículo!');
   //pedir o km e motivo da remoção (via modal)
   const dataSaida = new Date().toLocaleDateString('pt-BR');
   const kmSaida = 0;
@@ -460,8 +468,8 @@ const layoutLinhasChassi = computed(() => {
 });
 
 // Funções de ação para o menu
-function desmontarPneu(id) {
-  alert('Função desmontar para o pneu ' + id + ' ainda não implementada.');
+function manutencaoPneu(id) {
+  alert('Função manutenção para o pneu ' + id + ' ainda não implementada.');
 }
 function descartarPneu(id) {
   alert('Função descartar para o pneu ' + id + ' ainda não implementada.');

@@ -1,11 +1,11 @@
 <template>
   <div class="p-8">
-    <h1 class="text-xl font-bold mb-6 text-gray-700">Painel de monitoramento</h1>
+    <h1 class="text-xl font-bold mb-6 text-base-content">Painel de monitoramento</h1>
     <div class="flex flex-wrap gap-4">
       <!-- Pneus -->
-      <div class="bg-blue-500 rounded-lg shadow p-4 w-48 text-white flex flex-col items-center">
+      <div class="bg-primary rounded-lg shadow p-4 w-48 text-primary-content flex flex-col items-center">
         <span class="text-3xl font-bold">{{ totalPneus }}</span>
-        <span class="text-sm uppercase tracking-wide">Pneus</span>
+        <span class="text-sm uppercase tracking-wide text-base-content">Pneus</span>
         <span class="text-xs mt-2 opacity-80">{{ pneusAlocados }} alocados / {{ pneusDisponiveis }} disponíveis</span>
         <!-- Ícone de pneu (roda) -->
         <svg class="mt-2 w-8 h-8 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -18,9 +18,9 @@
         </svg>
       </div>
       <!-- Veículos -->
-      <div class="bg-green-500 rounded-lg shadow p-4 w-48 text-white flex flex-col items-center">
+      <div class="bg-base-200 rounded-lg shadow p-4 w-48 text-primary-content flex flex-col items-center">
         <span class="text-3xl font-bold">{{ totalVeiculos }}</span>
-        <span class="text-sm uppercase tracking-wide">Veículos</span>
+        <span class="text-sm uppercase tracking-wide text-base-content">Veículos</span>
         <span class="text-xs mt-2 opacity-80">{{ veiculosAtivos }} ativos / {{ veiculosInativos }} inativos</span>
         <!-- Ícone de veículo -->
         <svg class="mt-2 w-8 h-8 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -31,9 +31,9 @@
         </svg>
       </div>
       <!-- Manutenções -->
-      <div class="bg-yellow-400 rounded-lg shadow p-4 w-48 text-white flex flex-col items-center">
+      <div class="bg-secondary rounded-lg shadow p-4 w-48 text-primary-content flex flex-col items-center">
         <span class="text-3xl font-bold">0</span>
-        <span class="text-sm uppercase tracking-wide">Manutenções</span>
+        <span class="text-sm uppercase tracking-wide text-base-content">Manutenções</span>
         <span class="text-xs mt-2 opacity-80">Em breve</span>
         <!-- Ícone de ferramenta (chave inglesa) -->
         <svg class="mt-2 w-8 h-8 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -42,9 +42,9 @@
         </svg>
       </div>
       <!-- Descartes -->
-      <div class="bg-red-400 rounded-lg shadow p-4 w-48 text-white flex flex-col items-center">
+      <div class="bg-accent rounded-lg shadow p-4 w-48 text-primary-content flex flex-col items-center">
         <span class="text-3xl font-bold">0</span>
-        <span class="text-sm uppercase tracking-wide">Descartes</span>
+        <span class="text-sm uppercase tracking-wide text-base-content">Descartes</span>
         <span class="text-xs mt-2 opacity-80">Em breve</span>
         <!-- Ícone de lixeira -->
         <svg class="mt-2 w-8 h-8 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
