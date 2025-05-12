@@ -13,10 +13,10 @@
     <div v-if="pneusFiltrados.length === 0" class="text-gray-500">Nenhum pneu encontrado.</div>
     <div v-for="pneu in pneusFiltrados" :key="pneu.id" class="mb-8">
       <h2 class="text-lg font-bold mb-2">Pneu {{ pneu.id }} - {{ pneu.marca }} ({{ pneu.modelo }})</h2>
-      <div class="mb-2 text-sm text-gray-600">Tamanho: {{ pneu.tamanho }} | Aplicação: {{ pneu.aplicacao }}</div>
+      <div class="mb-2 text-sm text-primary-content">Tamanho: {{ pneu.tamanho }} | Aplicação: {{ pneu.aplicacao }}</div>
       <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200 table-auto border-collapse mb-2">
-          <thead class="bg-gray-50">
+          <thead class="bg-gray-100">
             <tr>
               <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Veículo</th>
               <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Data Entrada</th>

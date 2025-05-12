@@ -1,5 +1,6 @@
 <template>
-  <div class="p-6 flex flex-col space-y-2">
+  <div class="w-full max-w-full px-2 py-4 md:p-6 min-h-screen">
+
     <h1 class="text-2xl font-bold mb-6">Gestão de Veículos</h1>
     <!-- Vehicle Selection -->
     <div class="mb-6">
@@ -20,9 +21,11 @@
         </option>
       </select>
     </div>
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+
+      
       <!-- lado esquerdo: lista de pneus -->
-      <div class="bg-base-100 rounded-lg shadow p-6">
+      <div class="bg-base-100 rounded-lg shadow p-4 w-full min-w-0">
         <div class="flex justify-between items-center mb-4">
           <h2 class="text-lg font-semibold">Lista de Pneus</h2>
           <button
@@ -32,40 +35,44 @@
             Selecionar Pneu
           </button>
         </div>
-        <table class="min-w-full divide-y divide-base-300">
-          <thead class="bg-base-200">
-            <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium text-base-content uppercase tracking-wider">ID</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-base-content uppercase tracking-wider">Marca</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-base-content uppercase tracking-wider">Modelo</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-base-content uppercase tracking-wider">Posição</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-base-content uppercase tracking-wider">Ações</th>
-            </tr>
-          </thead>
-          <tbody class="bg-base-100 divide-y divide-base-300">
-            <tr v-for="pneu in pneuStore.obterPneusDoVeiculoAtual()" :key="pneu.id" draggable="true" @dragstart="onDragStart(pneu.id)">
-              <td class="px-6 py-4 whitespace-nowrap">{{ pneu.id }}</td>
-              <td class="px-6 py-4 whitespace-nowrap">{{ pneu.marca }}</td>
-              <td class="px-6 py-4 whitespace-nowrap">{{ pneu.modelo }}</td>
-              <td class="px-6 py-4 whitespace-nowrap text-xs text-base-content">
-                {{ pneu.posicao || 'N/A' }}
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap">
-                <PneuOptionsMenu
-                  @remover="removerPneuComHistorico(pneu.id)"
-                  @manutencao="manutencaoPneu(pneu.id)"
-                  @descartar="descartarPneu(pneu.id)"
-                  @historico="mostrarHistoricoPneu(pneu.id)"
-                />
-              </td>
-            </tr>
-            <tr v-if="pneuStore.pneusPorVeiculo.length === 0">
-              <td colspan="5" class="px-6 py-4 text-center text-base-content">
-                Nenhum pneu disponível
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-base-300 text-xs md:text-sm">
+            <thead class="bg-base-200">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-base-content uppercase tracking-wider">ID</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-base-content uppercase tracking-wider">Marca</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-base-content uppercase tracking-wider">Modelo</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-base-content uppercase tracking-wider">Posição</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-base-content uppercase tracking-wider">Ações</th>
+              </tr>
+            </thead>
+            <tbody class="bg-base-100 divide-y divide-base-300">
+              <tr v-for="pneu in pneuStore.obterPneusDoVeiculoAtual()" :key="pneu.id" draggable="true" @dragstart="onDragStart(pneu.id)">
+                <td class="px-6 py-4 whitespace-nowrap">{{ pneu.id }}</td>
+                <td class="px-6 py-4 whitespace-nowrap">{{ pneu.marca }}</td>
+                <td class="px-6 py-4 whitespace-nowrap">{{ pneu.modelo }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-xs text-base-content">
+                  {{ pneu.posicao || 'N/A' }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap relative">
+                  <PneuOptionsMenu
+                    @remover="removerPneuComHistorico(pneu.id)"
+                    @manutencao="manutencaoPneu(pneu.id)"
+                    @descartar="descartarPneu(pneu.id)"
+                    @historico="mostrarHistoricoPneu(pneu.id)"
+                    menu-class="z-50"
+                  />
+                </td>
+              </tr>
+              <tr v-if="pneuStore.pneusPorVeiculo.length === 0">
+                <td colspan="5" class="px-6 py-4 text-center text-base-content">
+                  Nenhum pneu disponível
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
         <!-- Dialog de seleção de pneus -->
         <Dialog :open="showDialog" @close="showDialog = false" class="fixed z-10 inset-0 overflow-y-auto">
           <div class="flex items-center justify-center min-h-screen bg-black bg-opacity-40">
@@ -163,12 +170,13 @@
               <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
                 <span class="text-sm font-semibold" style="color: #E53935">{{ item.dataSaida || '-' }}</span>
                 <span class="text-base font-bold" style="color: #E53935">{{ item.placaVeiculo || item.veiculoId || '-' }}</span>
+                <span class="text-sm font-semibold" style="color: #E53935">{{ item.modelo || '-' }}</span> <!--Falta implementar modelo do veículo a baixo placa-->
               </div>
               <div class="text-sm" style="color: #E53935">
                 <span class="text-md font-bold">{{ item.tipoMovimentacao }}</span>
                 <div><span class="font-semibold">KM Saída:</span> {{ item.kmSaida ?? '-' }}</div>
                 <div><span class="font-semibold">Sulco Saída (mm):</span> {{ item.sulcoSaida ?? '-' }}</div>
-                <div><span class="font-semibold">Motivo Saída:</span> {{ item.motivoSaida || '-' }}</div>
+                <div><span class="font-semibold">Posição:</span> {{ item.posicaoAtual ?? '-' }}</div> <!--Falta atualizar não está mostrando-->
               </div>
             </div>
           </div>
@@ -211,7 +219,7 @@
       </div>
       
       <!-- lado direito: visualização dos eixos -->
-      <div class="bg-base-100 rounded-lg shadow p-6">
+      <div class="bg-base-100 rounded-lg shadow p-4 w-full min-w-0 mt-4 md:mt-0">
         <h2 class="text-lg font-semibold mb-4">Visualização dos Eixos</h2>
         <div v-if="!selectedVehicle" class="text-center text-base-content py-20">
           Selecione um veículo para ver a configuração dos eixos
@@ -271,6 +279,7 @@
 
 <script setup>
 import { ref, computed } from 'vue';
+
 import { toast } from 'vue3-toastify';
 import { useVeiculoStore } from '@/stores/Veiculo'; 
 import { usePneuStore } from '@/stores/pneu';

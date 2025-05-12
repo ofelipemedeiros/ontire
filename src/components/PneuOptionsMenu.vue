@@ -7,7 +7,7 @@
         <circle cx="19" cy="12" r="2"/>
       </svg>
     </button>
-    <div v-if="open" class="origin-top-right absolute right-0 mt-2 w-40 rounded-md shadow-lg bg-base-100 ring-1 ring-black ring-opacity-5 z-30">
+    <div v-if="open" class="origin-top-right absolute right-0 mt-2 w-40 rounded-md shadow-lg bg-base-100 ring-1 ring-black ring-opacity-5 z-50">
       <div class="py-1 flex flex-col">
         <div class="tooltip" data-tip="Remover este pneu do veículo">
   <button @click="$emit('remover')" class="w-full text-left px-4 py-2 text-error hover:bg-base-200">Remover</button>
