@@ -35,7 +35,7 @@
             Selecionar Pneu
           </button>
         </div>
-        <div class="overflow-x-auto">
+        <div >
           <table class="min-w-full divide-y divide-base-300 text-xs md:text-sm">
             <thead class="bg-base-200">
               <tr>
