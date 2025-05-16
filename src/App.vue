@@ -32,6 +32,12 @@ import Dashboard from './views/Dashboard.vue';
               Gestão de Pneus
               </RouterLink>
               <RouterLink
+              to="/pneus"
+              class="inline-flex items-center px-1 pt-1 text-sm font-medium text-base-content hover:text-primary-content"
+              >
+              Pneus
+              </RouterLink>
+              <RouterLink
               to="#"
               class="inline-flex items-center px-1 pt-1 text-sm font-medium text-base-content hover:text-primary-content"
               >

@@ -84,7 +84,7 @@
                   
                   <span class="text-base-content">{{ pneu.id }} - {{ pneu.marca }} {{ pneu.modelo }}</span>
                   <div class="tooltip" data-tip="Adicionar este pneu ao veículo">
-  <button @click="pneuStore.adicionarPneuAoVeiculo(pneu)" class="btn btn-primary btn-sm">Adicionar</button>
+  <button @click="handlePneuSelection(pneu)" class="btn btn-primary btn-sm">Adicionar</button>
 </div>
                 </li>
                 <li v-if="pneusDisponiveis.length === 0" class="text-center text-gray-400 py-4">Nenhum pneu encontrado</li>
@@ -325,7 +325,7 @@ function adicionarPneuTabela(pneu) {
   if (!pneusSelecionados.value.some(p => p.id === pneu.id)) {
     pneusSelecionados.value.push(pneu);
     toast.success('Pneu adicionado ao veículo!');
-  }
+  }  
   showDialog.value = false;
 }
 
@@ -445,6 +445,15 @@ function abrirSulcoDialog(posicao, pneuId) {
 function confirmarSulcoEAdicionar() {
   showSulcoModal.value = false;
   showKmModal.value = true;
+}
+
+function handlePneuSelection(pneu) {
+  if (!selectedVehicle.value) {
+    toast.error('Por favor, selecione um veículo antes de adicionar um pneu.')
+    showDialog = false;
+    return;
+  }
+  pneuStore.adicionarPneuAoVeiculo(pneu);
 }
 
 function onDragStart(id) {
