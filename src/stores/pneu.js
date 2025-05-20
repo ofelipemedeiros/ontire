@@ -1,4 +1,4 @@
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 
 // Store em formato setup (função)
@@ -91,8 +91,16 @@ export const usePneuStore = defineStore('pneu', () => {
         const pneu = pneus.value.find(p => p.id === pneuId);
         if(!pneu) return;
         if(!pneu.historico) pneu.historico = [];
-        // Se for remoção, registra evento de saída
+
+        // Se for remoção, registra evento de saída e calcula km rodado no período
         if(tipoMovimentacao === 'Pneu Removido') {
+            // Pega o último registro de instalação
+            const ultimaInstalacao = pneu.historico.length > 0 ? 
+                pneu.historico[pneu.historico.length - 1] : null;
+
+            const kmRodadoPeriodo = ultimaInstalacao && ultimaInstalacao.kmEntrada && kmSaida ? 
+                kmSaida - ultimaInstalacao.kmEntrada : 0;
+
             pneu.historico.push({
                 veiculoId,
                 dataEntrada: null,
@@ -102,7 +110,8 @@ export const usePneuStore = defineStore('pneu', () => {
                 kmSaida: kmSaida || null,
                 sulcoSaida: sulcoSaida || null,
                 tipoMovimentacao: 'Pneu Removido',
-                posicao: null
+                posicao: null,
+                kmRodadoPeriodo // Novo campo
             });
         } else {
             // Instalação padrão
@@ -115,7 +124,8 @@ export const usePneuStore = defineStore('pneu', () => {
                 kmSaida: null,
                 sulcoSaida: null,
                 tipoMovimentacao: tipoMovimentacao || 'Pneu Instalado',
-                posicao: arguments[1]?.posicao || null
+                posicao: arguments[1]?.posicao || null,
+                kmRodadoPeriodo: 0 // Inicializa com 0, será atualizado na remoção
             });
         }
     }
@@ -128,6 +138,11 @@ export const usePneuStore = defineStore('pneu', () => {
             ultimo.dataSaida = dataSaida;
             ultimo.kmSaida = kmSaida;
             ultimo.motivoSaida = motivoSaida;
+            
+            // Calcula kmRodadoPeriodo se tiver kmEntrada e kmSaida
+            if (ultimo.kmEntrada !== null && kmSaida !== null) {
+                ultimo.kmRodadoPeriodo = kmSaida - ultimo.kmEntrada;
+            }
         }
     }
 
@@ -168,7 +183,25 @@ export const usePneuStore = defineStore('pneu', () => {
 
     function obterPneusDoVeiculoAtual() {
         return pneusPorVeiculo.value[veiculoSelecionado.value] || [];
-      }
+    }
+
+    // Calcula a quilometragem total rodada por cada pneu
+    const kmRodadoPorPneu = computed(() => pneus.value.map(pneu => {
+        let kmTotal = 0;
+        
+        if (pneu.historico && pneu.historico.length > 0) {
+            pneu.historico.forEach(registro => {
+                if (registro.kmRodadoPeriodo) {
+                    kmTotal += registro.kmRodadoPeriodo;
+                }
+            });
+        }
+        
+        return {
+            id: pneu.id,
+            kmRodado: kmTotal
+        };
+    }));
     
       return {
         pneus,
@@ -179,6 +212,7 @@ export const usePneuStore = defineStore('pneu', () => {
         adicionarPneuAoVeiculo,
         removerPneuDoVeiculo,
         obterPneusDoVeiculoAtual,
+        kmRodadoPorPneu,
       };
 
 })

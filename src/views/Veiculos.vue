@@ -450,7 +450,6 @@ function confirmarSulcoEAdicionar() {
 function handlePneuSelection(pneu) {
   if (!selectedVehicle.value) {
     toast.error('Por favor, selecione um veículo antes de adicionar um pneu.')
-    showDialog = false;
     return;
   }
   pneuStore.adicionarPneuAoVeiculo(pneu);
